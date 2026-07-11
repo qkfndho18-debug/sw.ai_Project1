@@ -2,9 +2,6 @@
    StudyBloom — Paper Journal Theme
    ============================================== */
 
-/* --- Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Caveat:wght@400;600;700&display=swap');
-
 /* --- Custom Properties --- */
 :root {
   --bg:            #FEFAE0;
@@ -944,14 +941,51 @@ body {
    RESPONSIVE
    ================================================ */
 @media (max-width: 600px) {
-  .tab-btn         { padding: 10px 11px; font-size: 12px; }
+  /* Tab nav — tighter on mobile, still scrollable */
+  .tab-btn         { padding: 9px 10px; font-size: 11.5px; gap: 3px; }
+  .tab-nav         { top: 48px; }
+
+  /* Layouts */
   .panel-grid.two-col { grid-template-columns: 1fr; }
   .form-row        { flex-direction: column; }
-  .dash-header     { flex-wrap: wrap; gap: 8px; }
+  .form-group.align-end { flex-direction: column; align-items: stretch; }
+  .form-group.align-end .btn-primary { width: 100%; }
+
+  /* Header */
+  .dash-header     { padding: 8px 12px; gap: 6px; }
+  .dash-logo       { font-size: 20px; }
+  .dash-header-right { max-width: 200px; }
+  .student-badge   { font-size: 12px; }
+
+  /* Login */
   .logo-title      { font-size: 42px; }
+  .logo-plant      { font-size: 56px; }
   .login-card      { padding: 24px 18px; }
+
+  /* Quiz screen */
   .quiz-card       { padding: 24px 18px; }
+  .quiz-question   { font-size: 16px; }
+  .quiz-choice-btn { font-size: 14px; padding: 12px 14px; }
+
+  /* Result screen */
   .result-container{ padding: 24px 16px 48px; }
+  .result-type     { font-size: 34px; }
+  .btn-primary.btn-block { margin-top: 16px; }
+
+  /* Level */
   .tree-art        { font-size: 40px; }
+
+  /* Achievement */
   .achievement-grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* Challenge */
+  .challenge-card .btn-primary { width: 100%; }
+
+  /* Toast */
+  .toast { font-size: 13px; padding: 10px 20px; white-space: normal; max-width: 88vw; }
+}
+
+@media (max-width: 400px) {
+  .tab-btn { padding: 8px 8px; font-size: 11px; }
+  .achievement-grid { grid-template-columns: repeat(2, 1fr); }
 }

@@ -133,7 +133,7 @@ let quizIndex      = 0;
 let quizScores     = {};
 let todayChallenge = null;
 let challengeDone  = false;
-let dailyQuiz      = { item: null, answered: false };
+let dailyQuiz      = { item: null, answered: false, correct: null };
 
 // ================================================
 // STORAGE HELPERS
@@ -157,7 +157,8 @@ function getQuizCount(n)     { return LS.get('sb_quiz_' + n) || 0; }
 function saveQuizCount(n, c) { LS.set('sb_quiz_' + n, c); }
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 // ================================================
@@ -538,7 +539,9 @@ function drawQuizUI() {
   }).join('');
 
   const resultBadge = dailyQuiz.answered
-    ? `<div class="quiz-result-badge correct">🎉 정답이에요! EXP +5</div>`
+    ? (dailyQuiz.correct
+        ? `<div class="quiz-result-badge correct">🎉 정답이에요! EXP +5</div>`
+        : `<div class="quiz-result-badge wrong">❌ 오답이에요. 정답은 <strong>${item.a + 1}번</strong>이에요.</div>`)
     : '';
 
   const nextBtn = dailyQuiz.answered
@@ -581,6 +584,7 @@ function answerDailyQuiz(idx) {
   `;
 
   dailyQuiz.answered = true;
+  dailyQuiz.correct  = correct;
 
   if (correct) {
     addExp(5);
@@ -593,6 +597,7 @@ function answerDailyQuiz(idx) {
 function nextDailyQuiz() {
   dailyQuiz.item     = QUIZ_POOL[Math.floor(Math.random() * QUIZ_POOL.length)];
   dailyQuiz.answered = false;
+  dailyQuiz.correct  = null;
   drawQuizUI();
 }
 
@@ -823,7 +828,7 @@ function renderStreak() {
   for (let i = 29; i >= 0; i--) {
     const d   = new Date();
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const div = document.createElement('div');
     div.className = `streak-day${dates.has(key) ? ' active' : ''}${key === todayKey ? ' today' : ''}`;
     div.textContent = d.getDate();
