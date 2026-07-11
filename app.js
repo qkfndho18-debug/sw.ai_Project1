@@ -80,20 +80,74 @@ const LEVEL_TREES = {
   5: "🌳🌳🌳\n✨👑✨"
 };
 
-const QUIZ_POOL = [
-  { q: "파이썬에서 리스트를 만드는 기호는?",      c: ["{ }","[ ]","( )","< >"],        a: 1 },
-  { q: "파이썬에서 반복문 키워드는?",             c: ["repeat","while","loop","each"],  a: 1 },
+const SUBJECTS = ["국어", "영어", "수학", "사회", "과학"];
+
+// General / 기타 pool — used when a student has no exam subjects selected,
+// or as a source for custom "기타" subjects.
+const QUIZ_GENERAL = [
   { q: "대한민국의 수도는?",                     c: ["부산","인천","서울","대전"],        a: 2 },
-  { q: "객체지향에서 객체를 만드는 틀은?",         c: ["변수","함수","클래스","리스트"],    a: 2 },
-  { q: "Python의 print() 함수는?",              c: ["입력","출력","저장","삭제"],        a: 1 },
-  { q: "HTML의 약자에 포함된 단어는?",           c: ["HyperText","HighText","HeavyText","HardText"], a: 0 },
-  { q: "CSS에서 글자 크기를 바꾸는 속성은?",      c: ["font-weight","text-size","font-size","text-style"], a: 2 },
-  { q: "다음 중 소수(prime number)는?",          c: ["4","6","7","9"],                  a: 2 },
   { q: "1시간은 몇 분인가요?",                   c: ["30분","45분","60분","90분"],        a: 2 },
   { q: "세계에서 가장 높은 산은?",               c: ["K2","에베레스트","마나슬루","킬리만자로"], a: 1 },
-  { q: "JavaScript에서 변수를 선언하는 키워드가 아닌 것은?", c: ["var","let","const","set"], a: 3 },
-  { q: "이진법에서 10은 십진법으로 얼마?",        c: ["2","4","8","10"],                 a: 0 }
+  { q: "다음 중 소수(prime number)는?",          c: ["4","6","7","9"],                  a: 2 },
+  { q: "이진법에서 10은 십진법으로 얼마?",        c: ["2","4","8","10"],                 a: 0 },
+  { q: "1년은 몇 개월인가요?",                   c: ["10개월","11개월","12개월","13개월"], a: 2 }
 ];
+
+// Subject-specific quiz banks — used for the daily quiz when a student has
+// selected exam subjects, so the quiz reinforces what they're actually studying.
+const QUIZ_BY_SUBJECT = {
+  국어: [
+    { q: "다음 중 품사가 다른 하나는?",            c: ["뛰다","걷다","예쁘다","먹다"],       a: 2 },
+    { q: "'가는 말이 고와야 오는 말이 곱다'와 뜻이 비슷한 표현은?", c: ["말 한마디로 천 냥 빚을 갚는다","티끌 모아 태산","등잔 밑이 어둡다","우물 안 개구리"], a: 0 },
+    { q: "다음 중 높임 표현이 쓰인 문장은?",       c: ["나는 밥을 먹었다","선생님께서 오셨다","친구가 왔다","비가 왔다"], a: 1 },
+    { q: "시의 운율을 이루는 요소가 아닌 것은?",   c: ["음보","각운","비유","반복"],         a: 2 },
+    { q: "'맑다'의 반의어는?",                    c: ["흐리다","깨끗하다","투명하다","밝다"], a: 0 },
+    { q: "다음 중 비유법이 사용된 문장은?",        c: ["하늘이 파랗다","내 마음은 호수다","오늘은 월요일이다","나는 학생이다"], a: 1 },
+    { q: "설명문의 주된 목적은?",                  c: ["정보 전달","감정 표현","주장 설득","이야기 전개"], a: 0 },
+    { q: "다음 중 맞춤법이 올바른 것은?",          c: ["웬지","왠지","웬듯","왠듣"],         a: 1 }
+  ],
+  영어: [
+    { q: "'apple'의 뜻은?",                       c: ["바나나","사과","포도","딸기"],       a: 1 },
+    { q: "다음 중 be동사가 아닌 것은?",            c: ["am","is","are","have"],            a: 3 },
+    { q: "'I ___ a student.'에 들어갈 말은?",      c: ["am","is","are","be"],              a: 0 },
+    { q: "'go'의 과거형은?",                       c: ["goed","went","gone","going"],       a: 1 },
+    { q: "'many'는 어떤 명사와 함께 쓰이나요?",     c: ["단수명사","복수명사","불가산명사","고유명사"], a: 1 },
+    { q: "'She is happy.'를 부정문으로 바꾸면?",   c: ["She isn't happy.","She don't happy.","She not happy.","She isn't happy?"], a: 0 },
+    { q: "'big'의 비교급은?",                      c: ["bigger","biger","more big","bigest"], a: 0 },
+    { q: "'What time is it?'의 알맞은 대답은?",    c: ["It's fine.","It's 3 o'clock.","I'm 12.","It's Monday."], a: 1 }
+  ],
+  수학: [
+    { q: "3 + 5 × 2의 값은?",                     c: ["16","13","10","8"],                a: 1 },
+    { q: "다음 중 소수(prime number)는?",          c: ["4","9","11","15"],                 a: 2 },
+    { q: "1/2 + 1/4의 값은?",                      c: ["2/6","3/4","2/4","1/8"],            a: 1 },
+    { q: "정삼각형의 세 각의 합은?",                c: ["90°","180°","270°","360°"],         a: 1 },
+    { q: "5의 제곱은?",                            c: ["10","15","20","25"],               a: 3 },
+    { q: "다음 중 짝수는?",                        c: ["7","12","15","21"],                a: 1 },
+    { q: "x + 3 = 7일 때, x의 값은?",               c: ["3","4","5","10"],                  a: 1 },
+    { q: "원의 지름이 10일 때 반지름은?",           c: ["2","5","10","20"],                 a: 1 }
+  ],
+  사회: [
+    { q: "대한민국의 국회의원 임기는?",             c: ["2년","3년","4년","5년"],            a: 2 },
+    { q: "삼권분립에 해당하지 않는 것은?",          c: ["입법부","행정부","사법부","언론부"], a: 3 },
+    { q: "세계에서 인구가 가장 많은 나라는?",        c: ["미국","인도","중국","인도네시아"], a: 1 },
+    { q: "우리나라의 화폐 단위는?",                 c: ["엔","원","달러","위안"],            a: 1 },
+    { q: "다음 중 헌법기관이 아닌 것은?",           c: ["국회","대법원","헌법재판소","시청"], a: 3 },
+    { q: "적도에 가까운 지역의 기후 특징은?",        c: ["한대기후","냉대기후","열대기후","건조기후"], a: 2 },
+    { q: "민주주의의 기본 원리가 아닌 것은?",        c: ["국민주권","권력분립","법치주의","독재정치"], a: 3 }
+  ],
+  과학: [
+    { q: "물의 화학식은?",                        c: ["CO2","H2O","O2","NaCl"],            a: 1 },
+    { q: "지구에서 가장 가까운 행성은?",            c: ["금성","화성","목성","수성"],        a: 0 },
+    { q: "식물이 광합성을 할 때 필요한 것은?",       c: ["산소","이산화탄소","질소","수소"],   a: 1 },
+    { q: "소리의 속도가 가장 빠른 매질은?",          c: ["공기","물","고체","진공"],          a: 2 },
+    { q: "인체에서 혈액을 순환시키는 기관은?",       c: ["폐","심장","위","간"],              a: 1 },
+    { q: "다음 중 힘의 단위는?",                    c: ["와트","뉴턴","줄","암페어"],        a: 1 },
+    { q: "달이 지구 주위를 도는 주기는 약 며칠?",     c: ["1일","7일","27일","365일"],        a: 2 }
+  ]
+};
+
+// Legacy alias kept for compatibility with any older references.
+const QUIZ_POOL = QUIZ_GENERAL;
 
 const CHALLENGES = [
   { mission: "📖 수학 30분 공부하기",          reward: 10 },
@@ -125,15 +179,38 @@ const ACHIEVEMENTS_DEF = [
 ];
 
 // ================================================
+// STUDY PLAN TASK TEMPLATES (by personality type)
+// ================================================
+
+// Each template takes a subject name + whether we're in the "final sprint"
+// (last 3 days before the exam) and returns a list of { task, minutes }.
+const TASK_TEMPLATES = {
+  탐구형: (subj, isFinal) => isFinal
+    ? [ { task: `${subj} 총정리 & 핵심 개념 훑어보기`, minutes: 30 }, { task: `${subj} 헷갈리는 개념 다시 이해하기`, minutes: 20 } ]
+    : [ { task: `${subj} 개념 정리`,        minutes: 30 }, { task: `${subj} 예제 문제 풀이`,  minutes: 20 }, { task: `${subj} 오답 원인 분석`, minutes: 15 } ],
+  반복형: (subj, isFinal) => isFinal
+    ? [ { task: `${subj} 기출·오답 총정리`, minutes: 35 }, { task: `${subj} 틀렸던 문제 다시 풀기`, minutes: 20 } ]
+    : [ { task: `${subj} 문제 20문제 풀기`, minutes: 30 }, { task: `${subj} 오답 다시 풀기`,   minutes: 15 }, { task: `${subj} 복습`,       minutes: 15 } ],
+  몰입형: (subj, isFinal) => isFinal
+    ? [ { task: `${subj} 25분 집중 총정리`, minutes: 25 }, { task: `5분 휴식`,                minutes: 5 }, { task: `${subj} 핵심만 압축 정리`, minutes: 20 } ]
+    : [ { task: `${subj} 25분 집중 공부`,   minutes: 25 }, { task: `5분 휴식`,                minutes: 5 }, { task: `${subj} 핵심 내용 정리`, minutes: 15 } ],
+  균형형: (subj, isFinal) => isFinal
+    ? [ { task: `${subj} 전 범위 총정리`,   minutes: 35 } ]
+    : [ { task: `${subj} 공부`,             minutes: 30 } ]
+};
+
+// ================================================
 // STATE
 // ================================================
 
-let student        = null;   // { name, grade, level, exp, studyType, typeScore }
-let quizIndex      = 0;
-let quizScores     = {};
-let todayChallenge = null;
-let challengeDone  = false;
-let dailyQuiz      = { item: null, answered: false, correct: null };
+let student         = null;   // { name, grade, level, exp, studyType, typeScore, examDate, examSubjects }
+let quizIndex       = 0;
+let quizScores      = {};
+let todayChallenge  = null;
+let challengeDone   = false;
+let dailyQuiz       = { item: null, subject: null, answered: false, correct: null };
+let calendarViewDate = new Date();
+let selectedCalendarKey = null;
 
 // ================================================
 // STORAGE HELPERS
@@ -155,10 +232,103 @@ function getStreakDates(n)   { return LS.get('sb_streak_' + n) || []; }
 function saveStreakDates(n,d) { LS.set('sb_streak_' + n, d); }
 function getQuizCount(n)     { return LS.get('sb_quiz_' + n) || 0; }
 function saveQuizCount(n, c) { LS.set('sb_quiz_' + n, c); }
+function getPlan(n)          { return LS.get('sb_plan_' + n) || null; }
+function savePlan(n, p)      { LS.set('sb_plan_' + n, p); }
 
 function todayStr() {
-  const d = new Date();
+  return dateKey(new Date());
+}
+
+function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+function diffDays(a, b) {
+  const ms = new Date(a.getFullYear(), a.getMonth(), a.getDate()) - new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round(ms / 86400000);
+}
+
+// ================================================
+// EXAM SUBJECT CHIP HELPERS (login + settings forms)
+// ================================================
+
+function toggleSubjectChip(el) {
+  el.classList.toggle('active');
+}
+
+function readSubjectChips(groupId, customInputId) {
+  const chips = Array.from(document.querySelectorAll(`#${groupId} .subject-chip.active`))
+    .map(c => c.dataset.subj);
+  const custom = (document.getElementById(customInputId).value || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+  return [...chips, ...custom];
+}
+
+function writeSubjectChips(groupId, customInputId, subjects) {
+  const known = new Set(SUBJECTS);
+  const custom = [];
+  document.querySelectorAll(`#${groupId} .subject-chip`).forEach(chip => {
+    chip.classList.toggle('active', subjects.includes(chip.dataset.subj));
+  });
+  subjects.forEach(s => { if (!known.has(s)) custom.push(s); });
+  document.getElementById(customInputId).value = custom.join(', ');
+}
+
+// ================================================
+// STUDY PLAN GENERATION (personality type × exam subjects × D-day)
+// ================================================
+
+function buildDayTasks(dayIndex, daysLeft, subjects, type) {
+  const list = subjects.length ? subjects : ['전체 과목'];
+  const isFinal = daysLeft <= 3;
+  let subsToday;
+  if (isFinal) {
+    subsToday = list; // final sprint — review everything every day
+  } else {
+    const per = Math.min(2, list.length);
+    const start = (dayIndex * per) % list.length;
+    subsToday = [];
+    for (let i = 0; i < per; i++) subsToday.push(list[(start + i) % list.length]);
+  }
+  const template = TASK_TEMPLATES[type] || TASK_TEMPLATES['균형형'];
+  const tasks = [];
+  subsToday.forEach(subj => tasks.push(...template(subj, isFinal)));
+  return tasks;
+}
+
+function generateStudyPlan(stu) {
+  if (!stu.examDate) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const examDate = new Date(stu.examDate + 'T00:00:00');
+  if (isNaN(examDate.getTime()) || examDate < today) return null;
+
+  const totalDays = Math.min(diffDays(examDate, today), 90); // cap to keep plan reasonable
+  const subjects  = stu.examSubjects && stu.examSubjects.length ? stu.examSubjects : [];
+  const type      = stu.studyType || '균형형';
+
+  const plan = {};
+  for (let i = 0; i <= totalDays; i++) {
+    const d        = addDays(today, i);
+    const key      = dateKey(d);
+    const daysLeft = totalDays - i;
+    plan[key] = { daysLeft, tasks: buildDayTasks(i, daysLeft, subjects, type) };
+  }
+  return plan;
+}
+
+function regenerateAndSavePlan() {
+  const plan = generateStudyPlan(student);
+  savePlan(student.name, plan);
+  return plan;
 }
 
 // ================================================
@@ -176,8 +346,10 @@ function showScreen(id) {
 // ================================================
 
 function handleLogin() {
-  const name  = document.getElementById('input-name').value.trim();
-  const grade = document.getElementById('input-grade').value;
+  const name     = document.getElementById('input-name').value.trim();
+  const grade    = document.getElementById('input-grade').value;
+  const examDate = document.getElementById('input-examdate').value || '';
+  const examSubjects = readSubjectChips('subject-chip-group', 'input-examsubject-custom');
 
   if (!name)  { showToast('이름을 입력해주세요! ✏️'); return; }
   if (!grade) { showToast('학년을 선택해주세요! 📚'); return; }
@@ -185,13 +357,13 @@ function handleLogin() {
   const existing = loadStudentData(name);
   if (existing) {
     student = existing;
-    // Returning student — go straight to dashboard
+    // Returning student — go straight to dashboard (exam info is managed from the 계획 tab)
     initDashboard();
     showScreen('screen-dashboard');
     showToast(`다시 왔군요, ${student.name}! 반가워요 😊`);
   } else {
     // New student — run quiz first
-    student = { name, grade, level: 1, exp: 0, studyType: '', typeScore: {} };
+    student = { name, grade, level: 1, exp: 0, studyType: '', typeScore: {}, examDate, examSubjects };
     quizIndex  = 0;
     quizScores = {};
     showScreen('screen-quiz');
@@ -248,6 +420,7 @@ function finishQuiz() {
   student.studyType = result;
   student.typeScore  = quizScores;
   saveStudent();
+  regenerateAndSavePlan();
   showResultScreen(result);
 }
 
@@ -285,11 +458,19 @@ function showResultScreen(result) {
   tipsEl.innerHTML = '<h4>💡 추천 공부법</h4>' +
     info.tips.map(t => `<div class="tip-item"><span>✔</span><span>${t}</span></div>`).join('');
 
-  // Plan preview
+  // Plan preview — prefer the generated exam-aware plan when available
   const planEl = document.getElementById('result-plan-preview');
   planEl.className = 'result-card';
-  planEl.innerHTML = '<h4>📅 오늘의 학습 계획</h4>' +
-    info.plan.map((p, i) => `<div class="plan-row"><span class="plan-num">${i + 1}</span><span>${p}</span></div>`).join('');
+  const generated = getPlan(student.name);
+  const todayPlan = generated && generated[todayStr()];
+  if (todayPlan) {
+    const ddayLine = `<p style="margin-bottom:12px;color:var(--primary);font-weight:700;">🎯 시험 D-${todayPlan.daysLeft} 까지의 맞춤 학습 계획을 만들었어요!</p>`;
+    planEl.innerHTML = '<h4>📅 오늘의 학습 계획</h4>' + ddayLine +
+      todayPlan.tasks.map((t, i) => `<div class="plan-row"><span class="plan-num">${i + 1}</span><span>${t.task} (${t.minutes}분)</span></div>`).join('');
+  } else {
+    planEl.innerHTML = '<h4>📅 오늘의 학습 계획</h4>' +
+      info.plan.map((p, i) => `<div class="plan-row"><span class="plan-num">${i + 1}</span><span>${p}</span></div>`).join('');
+  }
 
   showScreen('screen-result');
 
@@ -342,6 +523,7 @@ function switchTab(tab) {
 
   const renders = {
     home:        renderHome,
+    plan:        renderPlanTab,
     record:      renderRecords,
     stats:       renderStats,
     level:       renderLevel,
@@ -362,10 +544,32 @@ function switchTab(tab) {
 function renderHome() {
   const info = TYPE_INFO[student.studyType] || TYPE_INFO['균형형'];
 
-  // Study plan
-  document.getElementById('home-plan-list').innerHTML = info.plan
-    .map((p, i) => `<div class="plan-list-item"><span class="plan-num">${i + 1}</span><span>${p}</span></div>`)
-    .join('');
+  // D-day banner
+  const bannerEl = document.getElementById('home-dday-banner');
+  const plan     = getPlan(student.name);
+  const todayPlan = plan && plan[todayStr()];
+  if (student.examDate && todayPlan) {
+    const subjLabel = (student.examSubjects && student.examSubjects.length)
+      ? student.examSubjects.join(' · ')
+      : '전 과목';
+    bannerEl.innerHTML = `
+      <div class="dday-banner">
+        <span class="dday-badge">${todayPlan.daysLeft === 0 ? '🔥 시험 당일!' : 'D-' + todayPlan.daysLeft}</span>
+        <span class="dday-text">${student.examDate} 시험 (${subjLabel})</span>
+        <button class="btn-secondary dday-cal-btn" onclick="switchTab('plan')">📅 계획 보기</button>
+      </div>`;
+  } else {
+    bannerEl.innerHTML = `
+      <div class="dday-banner dday-empty">
+        <span class="dday-text">시험 날짜를 등록하면 D-day 맞춤 학습 계획을 만들어드려요!</span>
+        <button class="btn-secondary dday-cal-btn" onclick="switchTab('plan')">📅 등록하기</button>
+      </div>`;
+  }
+
+  // Study plan — prefer the generated exam-aware plan for today
+  document.getElementById('home-plan-list').innerHTML = todayPlan
+    ? todayPlan.tasks.map((t, i) => `<div class="plan-list-item"><span class="plan-num">${i + 1}</span><span>${t.task} (${t.minutes}분)</span></div>`).join('')
+    : info.plan.map((p, i) => `<div class="plan-list-item"><span class="plan-num">${i + 1}</span><span>${p}</span></div>`).join('');
 
   // Challenge preview
   const chalEl = document.getElementById('home-challenge-preview');
@@ -388,6 +592,139 @@ function renderHome() {
     <div class="type-badge">${info.emoji} ${student.studyType || '미검사'}</div>
     <p style="font-size:14px;color:var(--text-mid);line-height:1.6;">${info.desc}</p>
   `;
+}
+
+// ================================================
+// PLAN / CALENDAR TAB
+// ================================================
+
+function renderPlanTab() {
+  // Always start the calendar on the month containing today.
+  calendarViewDate = new Date();
+  selectedCalendarKey = null;
+  renderPlanSummary();
+  renderCalendarGrid();
+  document.getElementById('plan-detail-card').style.display = 'none';
+}
+
+function renderPlanSummary() {
+  const el = document.getElementById('plan-summary');
+  if (student.examDate) {
+    const subjLabel = (student.examSubjects && student.examSubjects.length) ? student.examSubjects.join(', ') : '전 과목';
+    el.innerHTML = `
+      <div class="plan-summary-text">
+        <strong>🎯 시험일:</strong> ${student.examDate}<br>
+        <strong>📚 시험 과목:</strong> ${subjLabel}
+      </div>`;
+  } else {
+    el.innerHTML = `<div class="plan-summary-text">아직 시험 정보가 없어요. '시험 정보 수정'에서 등록해보세요!</div>`;
+  }
+}
+
+function openExamSettings() {
+  const form = document.getElementById('exam-settings-form');
+  const willShow = form.style.display === 'none';
+  form.style.display = willShow ? 'block' : 'none';
+  if (willShow) {
+    document.getElementById('edit-examdate').value = student.examDate || '';
+    writeSubjectChips('edit-subject-chip-group', 'edit-examsubject-custom', student.examSubjects || []);
+  }
+}
+
+function saveExamSettings() {
+  const examDate = document.getElementById('edit-examdate').value || '';
+  const examSubjects = readSubjectChips('edit-subject-chip-group', 'edit-examsubject-custom');
+
+  if (!examDate) { showToast('시험 날짜를 선택해주세요! 📅'); return; }
+
+  student.examDate     = examDate;
+  student.examSubjects = examSubjects;
+  saveStudent();
+  regenerateAndSavePlan();
+
+  document.getElementById('exam-settings-form').style.display = 'none';
+  renderPlanSummary();
+  renderCalendarGrid();
+  showToast('시험 정보를 저장했어요! 맞춤 계획을 새로 만들었어요 ✨');
+}
+
+function changeCalendarMonth(delta) {
+  calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
+  renderCalendarGrid();
+}
+
+function renderCalendarGrid() {
+  const plan = getPlan(student.name) || {};
+  const year  = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth(); // 0-based
+
+  document.getElementById('calendar-month-label').textContent = `${year}년 ${month + 1}월`;
+
+  const firstDay   = new Date(year, month, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth  = new Date(year, month + 1, 0).getDate();
+  const todayKey     = todayStr();
+  const examKey      = student.examDate || null;
+
+  const gridEl = document.getElementById('calendar-grid');
+  gridEl.innerHTML = '';
+
+  for (let i = 0; i < startWeekday; i++) {
+    const blank = document.createElement('div');
+    blank.className = 'calendar-cell empty';
+    gridEl.appendChild(blank);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d   = new Date(year, month, day);
+    const key = dateKey(d);
+    const dayPlan = plan[key];
+
+    const cell = document.createElement('div');
+    cell.className = 'calendar-cell';
+    if (key === todayKey) cell.classList.add('today');
+    if (key === examKey)  cell.classList.add('exam-day');
+    if (dayPlan)          cell.classList.add('has-plan');
+    if (key === selectedCalendarKey) cell.classList.add('selected');
+
+    cell.innerHTML = `
+      <span class="cal-day-num">${day}</span>
+      ${dayPlan ? `<span class="cal-dot"></span>` : ''}
+      ${key === examKey ? `<span class="cal-exam-tag">시험</span>` : ''}
+    `;
+    cell.onclick = () => selectCalendarDate(key);
+    gridEl.appendChild(cell);
+  }
+}
+
+function selectCalendarDate(key) {
+  selectedCalendarKey = key;
+  renderCalendarGrid();
+
+  const plan = getPlan(student.name) || {};
+  const dayPlan = plan[key];
+  const detailCard  = document.getElementById('plan-detail-card');
+  const detailTitle = document.getElementById('plan-detail-title');
+  const detailList  = document.getElementById('plan-detail-list');
+
+  detailCard.style.display = 'block';
+  const isExamDay = key === student.examDate;
+
+  if (dayPlan) {
+    detailTitle.textContent = isExamDay
+      ? `🔥 ${key} — 시험 당일!`
+      : `${key} — D-${dayPlan.daysLeft}`;
+    detailList.innerHTML = dayPlan.tasks
+      .map((t, i) => `<div class="plan-row"><span class="plan-num">${i + 1}</span><span>${t.task} (${t.minutes}분)</span></div>`)
+      .join('');
+  } else {
+    detailTitle.textContent = key;
+    detailList.innerHTML = emptyState('📭', student.examDate
+      ? '이 날짜에는 준비된 학습 계획이 없어요.<br>시험 범위 밖의 날짜예요.'
+      : '시험 정보를 등록하면<br>날짜별 학습 계획이 만들어져요!');
+  }
+
+  detailCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ================================================
@@ -517,12 +854,30 @@ function renderLevel() {
 // DAILY QUIZ TAB
 // ================================================
 
+// Picks a random exam subject (if the student has any) so the daily quiz
+// reinforces what they're actually being tested on; falls back to a general pool.
+function pickQuizForSubject() {
+  const subjects = (student.examSubjects || []).filter(s => QUIZ_BY_SUBJECT[s]);
+  if (subjects.length === 0) {
+    return { subject: null, item: QUIZ_GENERAL[Math.floor(Math.random() * QUIZ_GENERAL.length)] };
+  }
+  const subject = subjects[Math.floor(Math.random() * subjects.length)];
+  const pool     = QUIZ_BY_SUBJECT[subject];
+  return { subject, item: pool[Math.floor(Math.random() * pool.length)] };
+}
+
 function renderDailyQuiz() {
   if (!dailyQuiz.item) {
-    dailyQuiz.item     = QUIZ_POOL[Math.floor(Math.random() * QUIZ_POOL.length)];
+    const picked = pickQuizForSubject();
+    dailyQuiz.item     = picked.item;
+    dailyQuiz.subject  = picked.subject;
     dailyQuiz.answered = false;
   }
   drawQuizUI();
+}
+
+function subjectTagHtml() {
+  return dailyQuiz.subject ? `<span class="quiz-subject-tag">${dailyQuiz.subject}</span>` : `<span class="quiz-subject-tag general">상식</span>`;
 }
 
 function drawQuizUI() {
@@ -549,6 +904,7 @@ function drawQuizUI() {
     : '';
 
   area.innerHTML = `
+    ${subjectTagHtml()}
     <p class="quiz-daily-q">${item.q}</p>
     <div class="quiz-choices">${choiceButtons}</div>
     ${resultBadge}
@@ -577,6 +933,7 @@ function answerDailyQuiz(idx) {
     : `<div class="quiz-result-badge wrong">❌ 오답이에요. 정답은 <strong>${item.a + 1}번</strong>이에요.</div>`;
 
   area.innerHTML = `
+    ${subjectTagHtml()}
     <p class="quiz-daily-q">${item.q}</p>
     <div class="quiz-choices">${choiceBtns}</div>
     ${badge}
@@ -595,7 +952,9 @@ function answerDailyQuiz(idx) {
 }
 
 function nextDailyQuiz() {
-  dailyQuiz.item     = QUIZ_POOL[Math.floor(Math.random() * QUIZ_POOL.length)];
+  const picked = pickQuizForSubject();
+  dailyQuiz.item     = picked.item;
+  dailyQuiz.subject  = picked.subject;
   dailyQuiz.answered = false;
   dailyQuiz.correct  = null;
   drawQuizUI();

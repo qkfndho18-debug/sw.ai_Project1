@@ -41,6 +41,21 @@
             <option value="기타">기타</option>
           </select>
         </div>
+        <div class="form-group">
+          <label for="input-examdate">시험 날짜 <span class="label-optional">(선택)</span></label>
+          <input type="date" id="input-examdate">
+        </div>
+        <div class="form-group">
+          <label>시험 과목 <span class="label-optional">(선택)</span></label>
+          <div class="subject-chip-group" id="subject-chip-group">
+            <button type="button" class="subject-chip" data-subj="국어" onclick="toggleSubjectChip(this)">국어</button>
+            <button type="button" class="subject-chip" data-subj="영어" onclick="toggleSubjectChip(this)">영어</button>
+            <button type="button" class="subject-chip" data-subj="수학" onclick="toggleSubjectChip(this)">수학</button>
+            <button type="button" class="subject-chip" data-subj="사회" onclick="toggleSubjectChip(this)">사회</button>
+            <button type="button" class="subject-chip" data-subj="과학" onclick="toggleSubjectChip(this)">과학</button>
+          </div>
+          <input type="text" id="input-examsubject-custom" placeholder="기타 과목 (쉼표로 구분, 예: 한국사, 정보)" style="margin-top:8px">
+        </div>
         <button class="btn-primary btn-block" onclick="handleLogin()">시작하기 →</button>
       </div>
     </div>
@@ -99,6 +114,7 @@
     <!-- TAB NAV -->
     <nav class="tab-nav">
       <button class="tab-btn active" data-tab="home"        onclick="switchTab('home')">🏠&nbsp;홈</button>
+      <button class="tab-btn"        data-tab="plan"        onclick="switchTab('plan')">📅&nbsp;계획</button>
       <button class="tab-btn"        data-tab="record"      onclick="switchTab('record')">📚&nbsp;기록</button>
       <button class="tab-btn"        data-tab="stats"       onclick="switchTab('stats')">📊&nbsp;통계</button>
       <button class="tab-btn"        data-tab="level"       onclick="switchTab('level')">🌳&nbsp;레벨</button>
@@ -115,6 +131,7 @@
 
       <!-- HOME -->
       <div id="tab-home" class="tab-panel active">
+        <div id="home-dday-banner"></div>
         <div class="panel-grid two-col">
           <div class="panel-card accent-left-green">
             <h3 class="card-title">📅 오늘의 학습 계획</h3>
@@ -132,6 +149,49 @@
             <h3 class="card-title">🌱 나의 학습 성향</h3>
             <div id="home-type-info"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- PLAN / CALENDAR -->
+      <div id="tab-plan" class="tab-panel">
+        <div class="panel-card">
+          <div class="plan-settings-row">
+            <div id="plan-summary"></div>
+            <button class="btn-secondary" onclick="openExamSettings()">⚙️ 시험 정보 수정</button>
+          </div>
+          <div id="exam-settings-form" class="exam-settings-form" style="display:none">
+            <div class="form-group">
+              <label for="edit-examdate">시험 날짜</label>
+              <input type="date" id="edit-examdate">
+            </div>
+            <div class="form-group">
+              <label>시험 과목</label>
+              <div class="subject-chip-group" id="edit-subject-chip-group">
+                <button type="button" class="subject-chip" data-subj="국어" onclick="toggleSubjectChip(this)">국어</button>
+                <button type="button" class="subject-chip" data-subj="영어" onclick="toggleSubjectChip(this)">영어</button>
+                <button type="button" class="subject-chip" data-subj="수학" onclick="toggleSubjectChip(this)">수학</button>
+                <button type="button" class="subject-chip" data-subj="사회" onclick="toggleSubjectChip(this)">사회</button>
+                <button type="button" class="subject-chip" data-subj="과학" onclick="toggleSubjectChip(this)">과학</button>
+              </div>
+              <input type="text" id="edit-examsubject-custom" placeholder="기타 과목 (쉼표로 구분)" style="margin-top:8px">
+            </div>
+            <button class="btn-primary" onclick="saveExamSettings()">저장하기</button>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="calendar-header">
+            <button class="btn-back" onclick="changeCalendarMonth(-1)">← 이전</button>
+            <h3 class="card-title" id="calendar-month-label" style="margin:0"></h3>
+            <button class="btn-back" onclick="changeCalendarMonth(1)">다음 →</button>
+          </div>
+          <div class="calendar-weekdays">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+        <div class="panel-card" id="plan-detail-card" style="display:none">
+          <h3 class="card-title" id="plan-detail-title"></h3>
+          <div id="plan-detail-list"></div>
         </div>
       </div>
 
