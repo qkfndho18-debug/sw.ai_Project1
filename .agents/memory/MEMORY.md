@@ -1,0 +1,2 @@
+- [Firebase in classic-script apps](firebase-classic-script-bridge.md) — load Firestore SDK as an ES module that sets `window.FirebaseDB`, keep the main app.js non-module to preserve inline onclick handlers.
+- [StudyBloom repo layout](studybloom-repo-layout.md) — root is a pure static web app (GitHub Pages target); unrelated Python CLI prototype lives isolated in python-cli/.

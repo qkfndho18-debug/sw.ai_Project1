@@ -203,7 +203,7 @@ const TASK_TEMPLATES = {
 // STATE
 // ================================================
 
-let student         = null;   // { name, grade, level, exp, studyType, typeScore, examDate, examSubjects }
+let student         = null;   // { name, grade, level, exp, studyType, typeScore, examDate, examSubjects, quizCount, streakDates, plan }
 let quizIndex       = 0;
 let quizScores      = {};
 let todayChallenge  = null;
@@ -212,28 +212,38 @@ let dailyQuiz       = { item: null, subject: null, answered: false, correct: nul
 let calendarViewDate = new Date();
 let selectedCalendarKey = null;
 
-// ================================================
-// STORAGE HELPERS
-// ================================================
+// In-memory caches for the current student's Firestore subcollections.
+// Loaded once at login, kept in sync on every add/update/delete so the UI
+// can render synchronously without awaiting a network round-trip each time.
+let goalsCache   = [];
+let recordsCache = [];
 
-const LS = {
-  get:    (k)    => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-  set:    (k, v) => localStorage.setItem(k, JSON.stringify(v)),
-  remove: (k)    => localStorage.removeItem(k)
-};
+// ================================================
+// FIREBASE-BACKED STORAGE HELPERS
+// ================================================
+// All persistence goes through window.FirebaseDB (see firebase.js), which
+// talks to Cloud Firestore. Reads used by render functions are served from
+// the in-memory caches above; writes are fire-and-forget against Firestore
+// (errors are caught and surfaced via toast so a dropped connection doesn't
+// silently lose data).
 
-function saveStudent()       { if (student) LS.set('sb_student_' + student.name, student); }
-function loadStudentData(n)  { return LS.get('sb_student_' + n); }
-function getRecords()        { return LS.get('sb_records') || []; }
-function saveRecords(r)      { LS.set('sb_records', r); }
-function getGoals(n)         { return LS.get('sb_goals_' + n) || []; }
-function saveGoals(n, g)     { LS.set('sb_goals_' + n, g); }
-function getStreakDates(n)   { return LS.get('sb_streak_' + n) || []; }
-function saveStreakDates(n,d) { LS.set('sb_streak_' + n, d); }
-function getQuizCount(n)     { return LS.get('sb_quiz_' + n) || 0; }
-function saveQuizCount(n, c) { LS.set('sb_quiz_' + n, c); }
-function getPlan(n)          { return LS.get('sb_plan_' + n) || null; }
-function savePlan(n, p)      { LS.set('sb_plan_' + n, p); }
+function requireFirebase() {
+  if (!window.FirebaseDB) {
+    showToast('⚠️ Firebase 연결에 문제가 있어요. firebase.js 설정을 확인해주세요.');
+    throw new Error('FirebaseDB is not available — check firebase.js config/script tag.');
+  }
+  return window.FirebaseDB;
+}
+
+async function saveStudent() {
+  if (!student) return;
+  try {
+    await requireFirebase().saveStudent(student.name, student);
+  } catch (e) {
+    console.error('saveStudent failed:', e);
+    showToast('⚠️ 저장에 실패했어요. 인터넷 연결을 확인해주세요.');
+  }
+}
 
 function todayStr() {
   return dateKey(new Date());
@@ -327,7 +337,8 @@ function generateStudyPlan(stu) {
 
 function regenerateAndSavePlan() {
   const plan = generateStudyPlan(student);
-  savePlan(student.name, plan);
+  student.plan = plan;
+  saveStudent();
   return plan;
 }
 
@@ -345,7 +356,7 @@ function showScreen(id) {
 // LOGIN
 // ================================================
 
-function handleLogin() {
+async function handleLogin() {
   const name     = document.getElementById('input-name').value.trim();
   const grade    = document.getElementById('input-grade').value;
   const examDate = document.getElementById('input-examdate').value || '';
@@ -354,20 +365,36 @@ function handleLogin() {
   if (!name)  { showToast('이름을 입력해주세요! ✏️'); return; }
   if (!grade) { showToast('학년을 선택해주세요! 📚'); return; }
 
-  const existing = loadStudentData(name);
-  if (existing) {
-    student = existing;
-    // Returning student — go straight to dashboard (exam info is managed from the 계획 tab)
-    initDashboard();
-    showScreen('screen-dashboard');
-    showToast(`다시 왔군요, ${student.name}! 반가워요 😊`);
-  } else {
-    // New student — run quiz first
-    student = { name, grade, level: 1, exp: 0, studyType: '', typeScore: {}, examDate, examSubjects };
-    quizIndex  = 0;
-    quizScores = {};
-    showScreen('screen-quiz');
-    renderQuiz();
+  const loginBtn = document.getElementById('login-submit-btn');
+  if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = '불러오는 중...'; }
+
+  try {
+    const existing = await requireFirebase().getStudent(name);
+    if (existing) {
+      student = existing;
+      [goalsCache, recordsCache] = await Promise.all([
+        requireFirebase().getGoals(name),
+        requireFirebase().getRecords(name)
+      ]);
+      // Returning student — go straight to dashboard (exam info is managed from the 계획 tab)
+      initDashboard();
+      showScreen('screen-dashboard');
+      showToast(`다시 왔군요, ${student.name}! 반가워요 😊`);
+    } else {
+      // New student — run quiz first
+      student = { name, grade, level: 1, exp: 0, studyType: '', typeScore: {}, examDate, examSubjects, quizCount: 0, streakDates: [], plan: null };
+      goalsCache   = [];
+      recordsCache = [];
+      quizIndex  = 0;
+      quizScores = {};
+      showScreen('screen-quiz');
+      renderQuiz();
+    }
+  } catch (e) {
+    console.error('handleLogin failed:', e);
+    showToast('⚠️ 데이터를 불러오지 못했어요. 인터넷 연결을 확인해주세요.');
+  } finally {
+    if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = '시작하기 →'; }
   }
 }
 
@@ -461,7 +488,7 @@ function showResultScreen(result) {
   // Plan preview — prefer the generated exam-aware plan when available
   const planEl = document.getElementById('result-plan-preview');
   planEl.className = 'result-card';
-  const generated = getPlan(student.name);
+  const generated = student.plan;
   const todayPlan = generated && generated[todayStr()];
   if (todayPlan) {
     const ddayLine = `<p style="margin-bottom:12px;color:var(--primary);font-weight:700;">🎯 시험 D-${todayPlan.daysLeft} 까지의 맞춤 학습 계획을 만들었어요!</p>`;
@@ -546,7 +573,7 @@ function renderHome() {
 
   // D-day banner
   const bannerEl = document.getElementById('home-dday-banner');
-  const plan     = getPlan(student.name);
+  const plan     = student.plan;
   const todayPlan = plan && plan[todayStr()];
   if (student.examDate && todayPlan) {
     const subjLabel = (student.examSubjects && student.examSubjects.length)
@@ -654,7 +681,7 @@ function changeCalendarMonth(delta) {
 }
 
 function renderCalendarGrid() {
-  const plan = getPlan(student.name) || {};
+  const plan = student.plan || {};
   const year  = calendarViewDate.getFullYear();
   const month = calendarViewDate.getMonth(); // 0-based
 
@@ -701,7 +728,7 @@ function selectCalendarDate(key) {
   selectedCalendarKey = key;
   renderCalendarGrid();
 
-  const plan = getPlan(student.name) || {};
+  const plan = student.plan || {};
   const dayPlan = plan[key];
   const detailCard  = document.getElementById('plan-detail-card');
   const detailTitle = document.getElementById('plan-detail-title');
@@ -731,16 +758,22 @@ function selectCalendarDate(key) {
 // RECORD TAB
 // ================================================
 
-function saveRecord() {
+async function saveRecord() {
   const subject = document.getElementById('record-subject').value.trim();
   const time    = parseInt(document.getElementById('record-time').value, 10);
 
   if (!subject)        { showToast('과목을 입력해주세요! 📚'); return; }
   if (!time || time < 1) { showToast('올바른 공부 시간을 입력해주세요!'); return; }
 
-  const records = getRecords();
-  records.push({ date: todayStr(), name: student.name, subject, time });
-  saveRecords(records);
+  const record = { date: todayStr(), subject, time };
+  try {
+    const id = await requireFirebase().addRecord(student.name, record);
+    recordsCache.push({ id, ...record });
+  } catch (e) {
+    console.error('saveRecord failed:', e);
+    showToast('⚠️ 기록 저장에 실패했어요. 인터넷 연결을 확인해주세요.');
+    return;
+  }
 
   const expGain = Math.floor(time / 10);
   addExp(expGain);
@@ -754,9 +787,7 @@ function saveRecord() {
 }
 
 function renderRecords() {
-  const myRecords = getRecords()
-    .filter(r => r.name === student.name)
-    .reverse();
+  const myRecords = [...recordsCache].reverse();
 
   const el = document.getElementById('record-list');
 
@@ -781,7 +812,7 @@ function renderRecords() {
 // ================================================
 
 function renderStats() {
-  const records  = getRecords().filter(r => r.name === student.name);
+  const records  = recordsCache;
   const total    = records.reduce((s, r) => s + r.time, 0);
   const count    = records.length;
   const avg      = count > 0 ? Math.round(total / count) : 0;
@@ -912,7 +943,7 @@ function drawQuizUI() {
   `;
 }
 
-function answerDailyQuiz(idx) {
+async function answerDailyQuiz(idx) {
   if (dailyQuiz.answered) return;
   const item    = dailyQuiz.item;
   const correct = idx === item.a;
@@ -945,8 +976,8 @@ function answerDailyQuiz(idx) {
 
   if (correct) {
     addExp(5);
-    const cnt = getQuizCount(student.name) + 1;
-    saveQuizCount(student.name, cnt);
+    student.quizCount = (student.quizCount || 0) + 1;
+    saveStudent();
     showToast('🧠 정답! EXP +5');
   }
 }
@@ -965,7 +996,7 @@ function nextDailyQuiz() {
 // ================================================
 
 function renderFeedback() {
-  const records  = getRecords().filter(r => r.name === student.name);
+  const records  = recordsCache;
   const totalT   = records.reduce((s, r) => s + r.time, 0);
   const subMap   = {};
   records.forEach(r => { subMap[r.subject] = (subMap[r.subject] || 0) + r.time; });
@@ -1031,36 +1062,51 @@ function renderFeedback() {
 // GOAL TAB
 // ================================================
 
-function addGoal() {
+async function addGoal() {
   const input = document.getElementById('goal-input');
   const text  = input.value.trim();
   if (!text) { showToast('목표를 입력해주세요! 🎯'); return; }
 
-  const goals = getGoals(student.name);
-  goals.push({ text, completed: false });
-  saveGoals(student.name, goals);
+  const goal = { text, completed: false };
+  try {
+    const id = await requireFirebase().addGoal(student.name, goal);
+    goalsCache.push({ id, ...goal });
+  } catch (e) {
+    console.error('addGoal failed:', e);
+    showToast('⚠️ 목표 추가에 실패했어요. 인터넷 연결을 확인해주세요.');
+    return;
+  }
   input.value = '';
   renderGoals();
   showToast('목표가 추가됐어요! 🎯');
 }
 
-function toggleGoal(idx) {
-  const goals = getGoals(student.name);
-  if (!goals[idx]) return;
-  goals[idx].completed = !goals[idx].completed;
-  saveGoals(student.name, goals);
+async function toggleGoal(id) {
+  const g = goalsCache.find(g => g.id === id);
+  if (!g) return;
+  g.completed = !g.completed;
   renderGoals();
+  try {
+    await requireFirebase().updateGoal(student.name, id, { completed: g.completed });
+  } catch (e) {
+    console.error('toggleGoal failed:', e);
+    showToast('⚠️ 목표 상태 저장에 실패했어요.');
+  }
 }
 
-function deleteGoal(idx) {
-  const goals = getGoals(student.name);
-  goals.splice(idx, 1);
-  saveGoals(student.name, goals);
+async function deleteGoal(id) {
+  goalsCache = goalsCache.filter(g => g.id !== id);
   renderGoals();
+  try {
+    await requireFirebase().deleteGoal(student.name, id);
+  } catch (e) {
+    console.error('deleteGoal failed:', e);
+    showToast('⚠️ 목표 삭제에 실패했어요.');
+  }
 }
 
 function renderGoals() {
-  const goals = getGoals(student.name);
+  const goals = goalsCache;
   const listEl = document.getElementById('goal-list');
   const progEl = document.getElementById('goal-progress-section');
 
@@ -1070,13 +1116,13 @@ function renderGoals() {
     return;
   }
 
-  listEl.innerHTML = goals.map((g, i) => `
+  listEl.innerHTML = goals.map((g) => `
     <div class="goal-item">
-      <div class="goal-check ${g.completed ? 'done' : ''}" onclick="toggleGoal(${i})">
+      <div class="goal-check ${g.completed ? 'done' : ''}" onclick="toggleGoal('${g.id}')">
         ${g.completed ? '✓' : ''}
       </div>
       <span class="goal-text ${g.completed ? 'done' : ''}">${g.text}</span>
-      <button class="btn-danger" onclick="deleteGoal(${i})" title="삭제">✕</button>
+      <button class="btn-danger" onclick="deleteGoal('${g.id}')" title="삭제">✕</button>
     </div>
   `).join('');
 
@@ -1101,12 +1147,12 @@ function renderGoals() {
 // ================================================
 
 function renderAchievements() {
-  const records  = getRecords().filter(r => r.name === student.name);
+  const records  = recordsCache;
   const totalT   = records.reduce((s, r) => s + r.time, 0);
-  const goals    = getGoals(student.name);
+  const goals    = goalsCache;
   const goalLen  = goals.length;
   const goalPct  = goalLen > 0 ? Math.round(goals.filter(g => g.completed).length / goalLen * 100) : 0;
-  const quizCnt  = getQuizCount(student.name);
+  const quizCnt  = student.quizCount || 0;
 
   const ctx = { student, totalTime: totalT, quizCount: quizCnt, goalPct, goalLen };
 
@@ -1132,16 +1178,16 @@ function renderAchievements() {
 // ================================================
 
 function markStudyDay() {
-  const dates = getStreakDates(student.name);
-  const t     = todayStr();
-  if (!dates.includes(t)) {
-    dates.push(t);
-    saveStreakDates(student.name, dates);
+  if (!student.streakDates) student.streakDates = [];
+  const t = todayStr();
+  if (!student.streakDates.includes(t)) {
+    student.streakDates.push(t);
+    saveStudent();
   }
 }
 
 function calcStreak() {
-  const rawDates  = getStreakDates(student.name);
+  const rawDates = student.streakDates || [];
   if (rawDates.length === 0) return 0;
 
   const uniqueSorted = [...new Set(rawDates)].sort().reverse(); // most recent first
@@ -1166,7 +1212,7 @@ function calcStreak() {
 
 function renderStreak() {
   const streak  = calcStreak();
-  const dates   = new Set(getStreakDates(student.name));
+  const dates   = new Set(student.streakDates || []);
 
   // Fire icons
   document.getElementById('streak-fire').textContent =

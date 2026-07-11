@@ -1,45 +1,57 @@
 # StudyBloom
 
 ## 프로젝트 소개
-학생 맞춤형 자기주도 학습 관리 프로그램 (Python CLI)
+학생 맞춤형 자기주도 학습 관리 **웹앱**. 학생의 학습 성향을 분석하고,
+시험 날짜/과목에 맞춘 개인별 공부 계획을 자동으로 추천합니다.
 
-학생의 학습 성향을 분석하고 개인 맞춤형 공부 계획을 추천합니다.
+## 아키텍처
+순수 **정적 HTML/CSS/JS** (프레임워크·서버 없음) + **Firebase Firestore**
+데이터 저장. Python/Flask 등 서버 사이드 로직은 전혀 사용하지 않으며,
+GitHub Pages 같은 정적 호스팅에 그대로 배포할 수 있도록 설계되어 있습니다.
 
-## 실행 방법
+- `index.html` / `style.css` / `app.js` — 화면과 앱 로직 (기존과 동일)
+- `firebase.js` — Firebase Firestore 연동 (CRUD). ES 모듈로 로드되어
+  `window.FirebaseDB`에 함수들을 노출하고, 일반 스크립트인 `app.js`가 이를
+  호출합니다 (module로 바꾸면 `index.html`의 인라인 `onclick` 핸들러가
+  깨지기 때문에 이 방식을 선택함)
+- `firestore.rules` — Firebase 콘솔에 붙여넣는 보안 규칙 참고 파일
+- `FIREBASE_SETUP.md` — Firebase Console에서 프로젝트 생성부터
+  GitHub Pages 배포까지의 단계별 체크리스트
+- `.nojekyll` — GitHub Pages가 Jekyll로 파일을 가공하지 않도록 하는 빈 파일
+- `python-cli/` — 이 프로젝트의 **초기 프로토타입**이었던 별개의 Python
+  OOP CLI 구현. 현재 웹앱과는 완전히 독립적이며 GitHub Pages 배포 대상이
+  아님 (참고용으로만 보관)
+
+## 로컬 실행
 ```bash
-python main.py
+python -m http.server 5000
 ```
+(정적 파일 서빙용 편의 명령일 뿐, 애플리케이션 로직은 전부 클라이언트 JS에 있음)
 
-## 프로젝트 구조
-- `main.py` — 진입점 및 메인 메뉴 루프
-- `student.py` — 학생 정보 (이름, 학년, 레벨, 경험치)
-- `analyzer.py` — 학습 성향 검사 및 분석
-- `planner.py` — 맞춤 공부 계획 생성
-- `record.py` — 공부 기록 저장/조회 (`data/records.txt`)
-- `level.py` — 레벨/경험치 시스템
-- `quiz.py` — 오늘의 퀴즈
-- `feedback.py` — AI 학습 코치 피드백
-- `goal.py` — 목표 설정 및 관리 (`data/goals.txt`)
-- `achievement.py` — 업적(배지) 시스템
-- `streak.py` — 연속 공부일 관리 (`data/streak.txt`)
-- `statistics.py` — 학습 통계 분석
-- `challenge.py` — 오늘의 챌린지
+## 데이터 저장 (Firebase Firestore)
+로그인 없이 학생 이름을 문서 ID로 사용합니다.
+```
+students/{학생 이름}
+  ├── name, grade, level, exp, studyType, typeScore
+  ├── examDate, examSubjects[], quizCount, streakDates[]
+  ├── plan { "YYYY-MM-DD": { daysLeft, tasks[] } }
+  ├── goals/{goalId}      (서브컬렉션)
+  └── records/{recordId}  (서브컬렉션)
+```
+`app.js`는 로그인 시 학생 문서 + goals + records를 한 번에 불러와
+`goalsCache`/`recordsCache`(및 `student` 객체)에 캐시하고, 렌더링은 이
+캐시에서 동기적으로 읽습니다. 변경(추가/토글/삭제)이 있을 때만 Firestore에
+비동기로 반영합니다.
 
-이와 별도로 `index.html` / `app.js` / `style.css`로 구성된 **웹 버전(SPA)** 이 있으며, `python -m http.server 5000`으로 서빙됩니다. 데이터는 브라우저 `localStorage`에 저장됩니다 (Python 버전의 `data/*.txt`와는 별개).
-
-## 웹 버전 주요 기능 (app.js)
-- 로그인 화면에서 이름/학년과 함께 **시험 날짜(D-day)**, **시험 과목**(국어/영어/수학/사회/과학 + 기타 직접입력)을 선택
-- 성향 검사 완료 시 성향(탐구형/반복형/몰입형/균형형) × 시험 과목 × 시험일까지 남은 기간을 기반으로 **날짜별 맞춤 학습 계획**을 자동 생성 (`generateStudyPlan`, `sb_plan_<이름>`에 저장). 시험 3일 전부터는 "총정리" 모드로 전환됨
-- 대시보드에 **📅 계획 탭**을 추가: 월별 캘린더에서 날짜를 클릭하면 해당 날짜의 학습 계획 상세를 확인 가능. "시험 정보 수정"으로 시험일/과목을 언제든 변경하면 계획이 재생성됨
-- 홈 탭에 D-day 배너 표시
-- **오늘의 퀴즈**는 학생이 선택한 시험 과목(`QUIZ_BY_SUBJECT`) 중 하나를 무작위로 골라 출제하며, 문제 위에 과목 태그를 표시. 시험 과목이 없으면 일반 상식(`QUIZ_GENERAL`) 문제 출제
-- 모바일 대응: 터치 타깃 확대(버튼/탭 최소 44px), iOS 확대 방지를 위한 입력창 폰트 16px, 캘린더/배너/설정 폼의 모바일 전용 레이아웃
-
-## 데이터 저장
-`data/` 폴더에 텍스트 파일로 저장됩니다 (Python CLI 버전, 첫 실행 시 자동 생성). 웹 버전은 `localStorage`를 사용합니다.
+## Firebase 설정 필요
+`firebase.js`의 `firebaseConfig`는 현재 placeholder(`YOUR_API_KEY` 등)
+상태입니다. 실제로 데이터를 저장하려면 사용자가 Firebase 콘솔에서 프로젝트를
+만들고 값을 채워야 합니다 — 절차는 `FIREBASE_SETUP.md` 참고.
 
 ## 의존성
-Python 버전: 표준 라이브러리만 사용 (`os`, `random`, `datetime`). 웹 버전: 순수 HTML/CSS/JS, 별도 패키지 설치 불필요.
+순수 HTML/CSS/JS + Firebase JS SDK v10 (CDN 모듈, `npm install` 불필요).
+`python-cli/`는 표준 라이브러리만 사용하는 별개 프로그램입니다.
 
 ## User preferences
 - Keep the existing OOP structure and Korean language throughout the codebase.
+- 배포 타깃은 GitHub Pages (정적 호스팅) + Firebase Firestore. 서버 사이드 코드(Flask 등)는 추가하지 않음.
