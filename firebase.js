@@ -119,8 +119,24 @@ async function addRecord(name, record) {
   return ref.id;
 }
 
+// ---------- 연결 진단 ----------
+// Firestore SDK(WebChannel/long-polling) 연결이 실패했을 때, 같은 프로젝트에
+// 대해 일반 REST 방식으로도 접속을 시도해서 원인을 좁힙니다.
+// - REST도 실패  → 이 네트워크에서 firestore.googleapis.com 자체가 막혀 있음
+// - REST는 성공  → SDK의 스트리밍 연결 방식만 막혀 있음 (방화벽/보안 소프트웨어가
+//                  '/Listen/channel' 같은 스트리밍 URL 패턴을 특별히 차단하는 경우가 많음)
+async function diagnoseConnection() {
+  const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/students?key=${firebaseConfig.apiKey}`;
+  try {
+    const res = await fetch(url, { method: 'GET' });
+    return { restOk: res.ok, status: res.status };
+  } catch (e) {
+    return { restOk: false, status: null, error: e.message };
+  }
+}
+
 // ------------------------------------------------
-// 3) app.js에서 쓸 수 있도록 전역에 노출
+// 4) app.js에서 쓸 수 있도록 전역에 노출
 // ------------------------------------------------
 window.FirebaseDB = {
   getStudent,
@@ -130,7 +146,8 @@ window.FirebaseDB = {
   updateGoal,
   deleteGoal,
   getRecords,
-  addRecord
+  addRecord,
+  diagnoseConnection
 };
 
 // firebase.js가 정상적으로 로드되었는지 app.js에서 확인할 수 있는 플래그
