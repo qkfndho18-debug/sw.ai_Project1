@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌱 StudyBloom</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="screen-login" class="screen active">
+    <div class="login-container">
+      <div class="login-logo">
+        <div class="logo-plant">🌱</div>
+        <h1 class="logo-title">StudyBloom</h1>
+        <p class="logo-sub">나만의 자기주도 학습 플래너</p>
+      </div>
+      <div class="login-card">
+        <h2 class="login-heading">안녕하세요! 👋</h2>
+        <p class="login-desc">이름과 학년을 입력하고 시작해요</p>
+        <div class="form-group">
+          <label for="input-name">이름</label>
+          <input type="text" id="input-name" placeholder="이름을 입력하세요" maxlength="20" onkeydown="if(event.key==='Enter')handleLogin()">
+        </div>
+        <div class="form-group">
+          <label for="input-grade">학년</label>
+          <select id="input-grade">
+            <option value="">학년 선택</option>
+            <option value="초6">초등학교 6학년</option>
+            <option value="중1">중학교 1학년</option>
+            <option value="중2">중학교 2학년</option>
+            <option value="중3">중학교 3학년</option>
+            <option value="고1">고등학교 1학년</option>
+            <option value="고2">고등학교 2학년</option>
+            <option value="고3">고등학교 3학년</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <button class="btn-primary btn-block" onclick="handleLogin()">시작하기 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== QUIZ SCREEN ==================== -->
+  <div id="screen-quiz" class="screen">
+    <div class="quiz-container">
+      <div class="quiz-header">
+        <button class="btn-back" onclick="showScreen('screen-login')">← 뒤로</button>
+        <h2 class="quiz-title">📝 학습 성향 검사</h2>
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
+        </div>
+        <p class="quiz-counter" id="quiz-counter">1 / 5</p>
+      </div>
+      <div class="quiz-card" id="quiz-card">
+        <p class="quiz-question" id="quiz-question"></p>
+        <div class="quiz-choices" id="quiz-choices"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== RESULT SCREEN ==================== -->
+  <div id="screen-result" class="screen">
+    <div class="result-container">
+      <div class="result-header">
+        <div class="result-emoji" id="result-emoji"></div>
+        <h2 class="result-type" id="result-type"></h2>
+        <p class="result-desc" id="result-desc"></p>
+      </div>
+      <div class="result-scores" id="result-scores"></div>
+      <div class="result-tips" id="result-tips"></div>
+      <div class="result-plan-preview" id="result-plan-preview"></div>
+      <button class="btn-primary btn-block" onclick="goToDashboard()">대시보드로 이동 →</button>
+    </div>
+  </div>
+
+  <!-- ==================== DASHBOARD SCREEN ==================== -->
+  <div id="screen-dashboard" class="screen">
+
+    <!-- TOP HEADER -->
+    <header class="dash-header">
+      <span class="dash-logo">🌱 StudyBloom</span>
+      <div class="dash-header-right">
+        <div class="student-badge">
+          <span id="dash-student-name"></span>
+          <span class="level-chip" id="dash-level-chip"></span>
+        </div>
+        <div class="exp-bar-wrapper" title="경험치">
+          <div class="exp-bar" id="dash-exp-bar"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- TAB NAV -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="home"        onclick="switchTab('home')">🏠&nbsp;홈</button>
+      <button class="tab-btn"        data-tab="record"      onclick="switchTab('record')">📚&nbsp;기록</button>
+      <button class="tab-btn"        data-tab="stats"       onclick="switchTab('stats')">📊&nbsp;통계</button>
+      <button class="tab-btn"        data-tab="level"       onclick="switchTab('level')">🌳&nbsp;레벨</button>
+      <button class="tab-btn"        data-tab="quiz"        onclick="switchTab('quiz')">🧠&nbsp;퀴즈</button>
+      <button class="tab-btn"        data-tab="feedback"    onclick="switchTab('feedback')">🤖&nbsp;AI코치</button>
+      <button class="tab-btn"        data-tab="goal"        onclick="switchTab('goal')">🎯&nbsp;목표</button>
+      <button class="tab-btn"        data-tab="achievement" onclick="switchTab('achievement')">🏅&nbsp;업적</button>
+      <button class="tab-btn"        data-tab="streak"      onclick="switchTab('streak')">🔥&nbsp;연속</button>
+      <button class="tab-btn"        data-tab="challenge"   onclick="switchTab('challenge')">⭐&nbsp;챌린지</button>
+    </nav>
+
+    <!-- TAB PANELS -->
+    <main class="tab-content">
+
+      <!-- HOME -->
+      <div id="tab-home" class="tab-panel active">
+        <div class="panel-grid two-col">
+          <div class="panel-card accent-left-green">
+            <h3 class="card-title">📅 오늘의 학습 계획</h3>
+            <div id="home-plan-list"></div>
+          </div>
+          <div class="panel-card accent-left-yellow">
+            <h3 class="card-title">⭐ 오늘의 챌린지</h3>
+            <div id="home-challenge-preview"></div>
+          </div>
+          <div class="panel-card accent-left-coral">
+            <h3 class="card-title">💬 오늘의 응원</h3>
+            <p class="quote-text" id="home-quote"></p>
+          </div>
+          <div class="panel-card accent-left-teal">
+            <h3 class="card-title">🌱 나의 학습 성향</h3>
+            <div id="home-type-info"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECORD -->
+      <div id="tab-record" class="tab-panel">
+        <div class="panel-card">
+          <h3 class="card-title">📚 공부 기록 저장</h3>
+          <div class="form-row">
+            <div class="form-group flex1">
+              <label>과목</label>
+              <input type="text" id="record-subject" placeholder="예: 수학, 영어, 국어..." onkeydown="if(event.key==='Enter')saveRecord()">
+            </div>
+            <div class="form-group" style="min-width:140px">
+              <label>공부 시간 (분)</label>
+              <input type="number" id="record-time" placeholder="예: 60" min="1" max="480">
+            </div>
+            <div class="form-group align-end">
+              <button class="btn-primary" onclick="saveRecord()">저장하기</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <h3 class="card-title">📖 공부 기록</h3>
+          <div id="record-list"></div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div id="tab-stats" class="tab-panel">
+        <div class="panel-grid two-col">
+          <div class="panel-card">
+            <h3 class="card-title">📊 학습 통계</h3>
+            <div id="stats-summary"></div>
+          </div>
+          <div class="panel-card">
+            <h3 class="card-title">📚 과목별 공부시간</h3>
+            <div id="stats-subjects"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEVEL -->
+      <div id="tab-level" class="tab-panel">
+        <div class="panel-card level-card">
+          <div class="tree-art" id="level-tree"></div>
+          <div class="level-name-badge" id="level-name-badge"></div>
+          <div class="level-stat-row" id="level-stat-row"></div>
+          <div class="xp-bar-wrap">
+            <div class="xp-bar-fill" id="level-xp-fill"></div>
+          </div>
+          <p class="xp-label" id="level-xp-label"></p>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div id="tab-quiz" class="tab-panel">
+        <div class="panel-card">
+          <h3 class="card-title">🧠 오늘의 퀴즈</h3>
+          <div id="daily-quiz-area"></div>
+        </div>
+      </div>
+
+      <!-- FEEDBACK -->
+      <div id="tab-feedback" class="tab-panel">
+        <div class="panel-grid two-col">
+          <div class="panel-card">
+            <h3 class="card-title">🤖 AI Study Coach</h3>
+            <div id="feedback-coach"></div>
+          </div>
+          <div class="panel-card">
+            <h3 class="card-title">⏱️ 공부시간 분석</h3>
+            <div id="feedback-time"></div>
+          </div>
+          <div class="panel-card">
+            <h3 class="card-title">📚 과목별 피드백</h3>
+            <div id="feedback-subject"></div>
+          </div>
+          <div class="panel-card">
+            <h3 class="card-title">🌱 성향 피드백</h3>
+            <div id="feedback-type"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GOAL -->
+      <div id="tab-goal" class="tab-panel">
+        <div class="panel-card">
+          <h3 class="card-title">🎯 새 목표 추가</h3>
+          <div class="form-row">
+            <div class="form-group flex1">
+              <input type="text" id="goal-input" placeholder="예: 수학 문제집 20문제 풀기" maxlength="60" onkeydown="if(event.key==='Enter')addGoal()">
+            </div>
+            <div class="form-group align-end">
+              <button class="btn-primary" onclick="addGoal()">추가</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <h3 class="card-title">📋 목표 목록</h3>
+          <div id="goal-list"></div>
+          <div id="goal-progress-section"></div>
+        </div>
+      </div>
+
+      <!-- ACHIEVEMENT -->
+      <div id="tab-achievement" class="tab-panel">
+        <div class="panel-card">
+          <h3 class="card-title">🏅 나의 업적</h3>
+          <div class="xp-bar-wrap" style="margin-bottom:6px">
+            <div class="xp-bar-fill" id="achievement-bar-fill" style="background:linear-gradient(90deg,#C7B3E5,#9B59B6)"></div>
+          </div>
+          <p class="xp-label" id="achievement-bar-label"></p>
+          <div id="achievement-list" class="achievement-grid"></div>
+        </div>
+      </div>
+
+      <!-- STREAK -->
+      <div id="tab-streak" class="tab-panel">
+        <div class="panel-card streak-card">
+          <div class="streak-fire-display" id="streak-fire"></div>
+          <h3 class="streak-count-text" id="streak-count"></h3>
+          <p class="streak-message" id="streak-message"></p>
+          <div class="streak-calendar" id="streak-calendar"></div>
+        </div>
+      </div>
+
+      <!-- CHALLENGE -->
+      <div id="tab-challenge" class="tab-panel">
+        <div class="panel-card challenge-card">
+          <h3 class="card-title">⭐ 오늘의 챌린지</h3>
+          <div id="challenge-display"></div>
+          <div id="challenge-action"></div>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- /screen-dashboard -->
+</div><!-- /app -->
+
+<div id="toast" class="toast" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>
