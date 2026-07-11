@@ -31,12 +31,13 @@ import {
 // "내 앱" > 웹 앱 추가에서 발급받은 값을 아래에 붙여넣으세요.
 // (자세한 절차는 FIREBASE_SETUP.md 체크리스트를 참고하세요.)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC-gIhs6Ak-6iOKwVYlPIH-Js6oj8HWQEE",
+  authDomain: "sw-ai-project1.firebaseapp.com",
+  projectId: "sw-ai-project1",
+  storageBucket: "sw-ai-project1.firebasestorage.app",
+  messagingSenderId: "369033362804",
+  appId: "1:369033362804:web:0ae5fff43dc258272e8021",
+  measurementId: "G-QZYWBGFT96"
 };
 
 const app = initializeApp(firebaseConfig);
