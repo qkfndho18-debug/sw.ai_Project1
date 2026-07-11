@@ -235,6 +235,15 @@ function requireFirebase() {
   return window.FirebaseDB;
 }
 
+// Wraps a Firestore call with a timeout so a stuck/never-resolving connection
+// (e.g. blocked network) surfaces as a clear error instead of hanging the UI forever.
+function withTimeout(promise, ms = 10000, label = '요청') {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} 시간 초과 (${ms}ms)`)), ms))
+  ]);
+}
+
 async function saveStudent() {
   if (!student) return;
   try {
@@ -369,13 +378,13 @@ async function handleLogin() {
   if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = '불러오는 중...'; }
 
   try {
-    const existing = await requireFirebase().getStudent(name);
+    const existing = await withTimeout(requireFirebase().getStudent(name), 10000, '학생 정보 불러오기');
     if (existing) {
       student = existing;
-      [goalsCache, recordsCache] = await Promise.all([
+      [goalsCache, recordsCache] = await withTimeout(Promise.all([
         requireFirebase().getGoals(name),
         requireFirebase().getRecords(name)
-      ]);
+      ]), 10000, '목표/기록 불러오기');
       // Returning student — go straight to dashboard (exam info is managed from the 계획 tab)
       initDashboard();
       showScreen('screen-dashboard');

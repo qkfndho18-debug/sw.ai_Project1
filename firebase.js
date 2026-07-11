@@ -43,10 +43,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Replit 프리뷰 등 일부 프록시/네트워크 환경에서는 Firestore의 기본 스트리밍
-// 연결(WebChannel)이 차단되어 "client is offline" 오류가 발생할 수 있습니다.
-// long-polling으로 자동 전환하도록 설정해 이 문제를 회피합니다.
+// 연결(WebChannel)이 차단되어 "client is offline" 오류가 발생하거나, 연결
+// 방식을 자동으로 판별하는 과정 자체가 멈춰버릴 수 있습니다. 판별 과정 없이
+// long-polling을 강제로 사용하도록 설정해 이 문제를 회피합니다.
 const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
+  experimentalForceLongPolling: true,
   useFetchStreams: false
 });
 
